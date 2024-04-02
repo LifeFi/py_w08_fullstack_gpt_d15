@@ -41,12 +41,10 @@ with header.expander("과제 내용 보기"):
 if header.button("RESET"):
     st.session_state["messages"] = []
 
-""" header 고정을 위한 처리.
-
-Streamlit 에서는 html 를 text로 처리하기 때문에, unsafe_allow_html=True 옵션 추가 필요.
-[data-testid="stVerticalBlock"]
-- strealit 이 elemnet 에 data-testid 를 부여한다고 함.
-"""
+# header 고정을 위한 처리.
+# Streamlit 에서는 html 를 text로 처리하기 때문에, unsafe_allow_html=True 옵션 추가 필요.
+# [data-testid="stVerticalBlock"]
+# - strealit 이 elemnet 에 data-testid 를 부여한다고 함.
 
 header.write("""<div class='fixed-header'/>""", unsafe_allow_html=True)
 header.markdown(
