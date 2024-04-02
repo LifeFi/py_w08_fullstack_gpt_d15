@@ -9,7 +9,7 @@ st.markdown(
     """
 # Streamlit 과제
 
-- [ ] D23 ~ D25 : D19 과제를 Streamlit으로 만들고 배포.
+- [X] D23 ~ D25 : D19 과제를 Streamlit으로 만들고 배포.
 - [ ] D26 ~ D28 :
 - [ ] D29 ~ D30 :
 - [ ] D31 ~ D32 :
