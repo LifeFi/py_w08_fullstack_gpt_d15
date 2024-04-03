@@ -12,6 +12,7 @@ from langchain.prompts import MessagesPlaceholder
 from langchain.callbacks.base import BaseCallbackHandler
 import streamlit as st
 from langchain.schema.document import Document
+import os
 
 # Steramlit code
 st.set_page_config(
@@ -128,6 +129,7 @@ llm = ChatOpenAI(
 
 @st.cache_data(show_spinner="Embedding file...")
 def embed_file(file):
+    os.makedirs("./.cache/files", exist_ok=True)
     file_content = file.read()
     file_path = f"./.cache/files/{file.name}"
     with open(file_path, "wb") as f:
