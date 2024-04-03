@@ -11,20 +11,34 @@ from langchain.memory import ConversationBufferMemory
 from langchain.prompts import MessagesPlaceholder
 from langchain.callbacks.base import BaseCallbackHandler
 import streamlit as st
+from langchain.schema.document import Document
 
 # Steramlit code
 st.set_page_config(
     page_title="D23 | FullstackGPT 과제",
     page_icon="🌪️",
 )
+
+with st.sidebar:
+    file = st.file_uploader(
+        ":blue[Upload a .txt .pdf or .docx file]",
+        type=["pdf", "txt", "docx", "md"],
+    )
+    api_key = st.text_input(":blue[OpenAI API_KEY]")
+    if st.button(":red[Reset API_KEY]"):
+        api_key = ""
+
 header = st.container()
 header.title("D23 | FullstackGPT 과제")
-with header.expander("과제 내용 보기"):
-    st.snow()
+with header.expander("과제 내용 보기", expanded=False if file and api_key else True):
+    # st.snow()
     st.markdown(
         """
     ### D23 (2024-04-02) 과제
-    - D19 과제를 Streamlit으로 만들고 배포하세요.
+    - D19 과제에서 구현한 RAG 파이프라인을 Streamlit으로 마이그레이션합니다.
+    - 파일 업로드 및 채팅 기록을 구현합니다.
+    - 사용자가 자체 OpenAI API 키를 사용하도록 허용하고, st.sidebar 내부의 st.input에서 이를 로드합니다.
+    - st.sidebar에 스트림릿 앱의 코드가 담긴 깃허브 리포지토리 링크를 넣습니다.
 
     #### [참고] D19 과제
     -   Stuff Documents 체인을 사용하여 완전한 RAG 파이프라인을 구현하세요.
@@ -38,7 +52,7 @@ with header.expander("과제 내용 보기"):
     """
     )
 
-if header.button("RESET"):
+if header.button(":red[RESET]"):
     st.session_state["messages"] = []
 
 # header 고정을 위한 처리.
@@ -46,19 +60,34 @@ if header.button("RESET"):
 # [data-testid="stVerticalBlock"]
 # - strealit 이 elemnet 에 data-testid 를 부여한다고 함.
 
-header.write("""<div class='fixed-header'/>""", unsafe_allow_html=True)
+header.write(
+    """
+    <div class='fixed-header'/>
+    """,
+    unsafe_allow_html=True,
+)
 header.markdown(
     """
     <style>
         div[data-testid="stVerticalBlock"] div:has(div.fixed-header) {
             position: sticky;
             top: 20px;
-            background-color: white;
             z-index: 999; 
         } 
         .fixed-header { 
             border-bottom: 1px solid rgba(0,0,0,0.2);
         }
+        @media (prefers-color-scheme: dark) {
+            div[data-testid="stVerticalBlock"] div:has(div.fixed-header) {
+                background-color: black;
+            }
+        }
+        @media (prefers-color-scheme: light) {
+            div[data-testid="stVerticalBlock"] div:has(div.fixed-header) {
+                background-color: white;
+            }
+        }
+        
     </style>
     """,
     unsafe_allow_html=True,
@@ -86,23 +115,30 @@ llm = ChatOpenAI(
     callbacks=[
         ChatCallbackHandler(),
     ],
+    api_key=api_key,
 )
 
-cache_dir = LocalFileStore("./.cache/")
-print(cache_dir.root_path)
 
-splitter = CharacterTextSplitter.from_tiktoken_encoder(
-    separator="\n",
-    chunk_size=600,
-    chunk_overlap=100,
-)
+@st.cache_data(show_spinner="Embedding file...")
+def embed_file(file):
+    file_content = file.read()
+    file_path = f"./.cache/files/{file.name}"
+    with open(file_path, "wb") as f:
+        f.write(file_content)
+    cache_dir = LocalFileStore(f"./.cache/embeddings/{file.name}")
+    splitter = CharacterTextSplitter.from_tiktoken_encoder(
+        separator="\n",
+        chunk_size=600,
+        chunk_overlap=100,
+    )
+    loader = UnstructuredFileLoader(file_path)
+    docs = loader.load_and_split(text_splitter=splitter)
+    embeddings = OpenAIEmbeddings()
+    cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
+    vectorstore = FAISS.from_documents(docs, cached_embeddings)
+    retriever = vectorstore.as_retriever()
+    return retriever
 
-loader = UnstructuredFileLoader("./files/document.txt")
-docs = loader.load_and_split(text_splitter=splitter)
-embeddings = OpenAIEmbeddings()
-cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
-vectorstore = FAISS.from_documents(docs, cached_embeddings)
-retriver = vectorstore.as_retriever()
 
 memory = ConversationBufferMemory(
     llm=llm,
@@ -132,27 +168,6 @@ def load_memory(_):
     return memory.load_memory_variables({})["chat_history"]
 
 
-chain = (
-    {
-        "context": retriver,
-        "question": RunnablePassthrough(),
-        "chat_history": RunnableLambda(load_memory),
-    }
-    | prompt
-    | llm
-)
-
-
-def invoke_chain(question):
-    result = chain.invoke(question)
-    memory.save_context(
-        {"input": question},
-        {"output": result.content},
-    )
-    print(result.content)
-    return result
-
-
 # streamlit code
 
 
@@ -178,11 +193,42 @@ def paint_history():
         )
 
 
-send_message("I'm ready! Ask away!", "ai", save=False)
-paint_history()
-message = st.chat_input("Ask anything about Chapter 3...")
-if message:
-    send_message(message, "human")
+if file and api_key:
+    retriver = embed_file(file)
+    send_message("I'm ready! Ask away!", "ai", save=False)
+    paint_history()
+    message = st.chat_input("Ask anything about Chapter 3...")
+    if message:
+        send_message(message, "human")
 
-    with st.chat_message("ai"):
-        invoke_chain(message)
+        chain = (
+            {
+                "context": retriver,
+                "question": RunnablePassthrough(),
+                "chat_history": RunnableLambda(load_memory),
+            }
+            | prompt
+            | llm
+        )
+
+        def invoke_chain(question):
+            print(chain)
+            result = chain.invoke(question)
+            memory.save_context(
+                {"input": question},
+                {"output": result.content},
+            )
+            print(result.content)
+            return result
+
+        with st.chat_message("ai"):
+            invoke_chain(message)
+else:
+    st.session_state["messages"] = []
+
+
+if not file:
+    st.warning("Please upload a :blue[File] on the sidebar.")
+
+if not api_key:
+    st.warning("Please provide an :blue[OpenAI API Key] on the sidebar.")
