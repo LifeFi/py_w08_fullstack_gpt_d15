@@ -27,6 +27,13 @@ with st.sidebar:
     api_key = st.text_input(":blue[OpenAI API_KEY]")
     if st.button(":red[Reset API_KEY]"):
         api_key = ""
+    st.divider()
+    st.markdown(
+        """
+        GitHub 링크: https://github.com/LifeFi/py_w08_fullstack_gpt_d15/blob/d23/pages/D23_DocumentGPT.py
+    
+        """
+    )
 
 header = st.container()
 header.title("D23 | FullstackGPT 과제")
