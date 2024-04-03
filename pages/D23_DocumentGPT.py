@@ -14,6 +14,9 @@ import streamlit as st
 from langchain.schema.document import Document
 import os
 
+# from datetime import datetime
+# import time
+
 # Steramlit code
 st.set_page_config(
     page_title="D23 | FullstackGPT 과제",
@@ -21,13 +24,33 @@ st.set_page_config(
 )
 
 with st.sidebar:
+    # date = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+    # st.header(date)
     file = st.file_uploader(
         ":blue[Upload a .txt .pdf or .docx file]",
         type=["pdf", "txt", "docx", "md"],
     )
-    api_key = st.text_input(":blue[OpenAI API_KEY]")
+
+    if "api_key" not in st.session_state:
+        st.session_state.api_key = ""
+
+    api_key = st.text_input(
+        ":blue[OpenAI API_KEY]",
+        value=st.session_state["api_key"],
+        key="api_key_input",
+    )
+    st.session_state["api_key"] = api_key
+
+    print(api_key)
+
+    def reset_api_key():
+        st.session_state["api_key"] = ""
+        print(st.session_state.api_key)
+
     if st.button(":red[Reset API_KEY]"):
-        api_key = ""
+        reset_api_key()
+        st.rerun()
+
     st.divider()
     st.markdown(
         """
@@ -35,6 +58,7 @@ with st.sidebar:
     
         """
     )
+
 
 header = st.container()
 header.title("D23 | FullstackGPT 과제")
@@ -101,6 +125,12 @@ header.markdown(
     unsafe_allow_html=True,
 )
 
+if not file:
+    st.warning("Please upload a :blue[File] on the sidebar.")
+
+if not api_key:
+    st.warning("Please provide an :blue[OpenAI API Key] on the sidebar.")
+
 
 # 로직 code
 class ChatCallbackHandler(BaseCallbackHandler):
@@ -117,14 +147,25 @@ class ChatCallbackHandler(BaseCallbackHandler):
         self.message_box.markdown(self.message)
 
 
-llm = ChatOpenAI(
-    temperature=0.1,
-    streaming=True,
-    callbacks=[
-        ChatCallbackHandler(),
-    ],
-    api_key=api_key,
-)
+try:
+    llm = ChatOpenAI(
+        temperature=0.1,
+        streaming=True,
+        callbacks=[
+            ChatCallbackHandler(),
+        ],
+        openai_api_key=api_key,
+    )
+except Exception as e:
+    if "api_key" or "api-key" or "API key" or "API Key" in str(e):
+        st.error("ChatOpenAI() : API_KEY 를 확인해 주세요.")
+    else:
+        st.error(f"Error: {e}")
+    st.stop()
+
+print(llm, "=======================================")
+print(llm.openai_api_key, "=======================================")
+print(api_key, "=======================================")
 
 
 @st.cache_data(show_spinner="Embedding file...")
@@ -142,19 +183,36 @@ def embed_file(file):
     )
     loader = UnstructuredFileLoader(file_path)
     docs = loader.load_and_split(text_splitter=splitter)
-    embeddings = OpenAIEmbeddings()
+
+    try:
+        embeddings = OpenAIEmbeddings(openai_api_key=api_key)
+
+    except Exception as e:
+        if "api_key" or "api-key" or "API key" or "API Key" in str(e):
+            st.error("OpenAIEmbeddings() : API_KEY 를 확인해 주세요.")
+        else:
+            st.error(f"Error: {e}")
+        st.stop()
+
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
     vectorstore = FAISS.from_documents(docs, cached_embeddings)
     retriever = vectorstore.as_retriever()
     return retriever
 
 
-memory = ConversationBufferMemory(
-    llm=llm,
-    max_token_limit=1000,
-    return_messages=True,
-    memory_key="chat_history",
-)
+try:
+    memory = ConversationBufferMemory(
+        llm=llm,
+        max_token_limit=1000,
+        return_messages=True,
+        memory_key="chat_history",
+    )
+except Exception as e:
+    if "api_key" or "api-key" or "API key" or "API Key" in str(e):
+        st.error("ConversationBufferMemory() : API_KEY 를 확인해 주세요.")
+    else:
+        st.error(f"Error: {e}")
+    st.stop()
 
 prompt = ChatPromptTemplate.from_messages(
     [
@@ -222,7 +280,16 @@ if file and api_key:
 
         def invoke_chain(question):
             print(chain)
-            result = chain.invoke(question)
+
+            try:
+                result = chain.invoke(question)
+            except Exception as e:
+                if "api_key" or "api-key" or "API key" or "API Key" in str(e):
+                    st.error("chain.invoke() : API_KEY 를 확인해 주세요.")
+                else:
+                    st.error(f"Error: {e}")
+                st.stop()
+
             memory.save_context(
                 {"input": question},
                 {"output": result.content},
@@ -234,10 +301,3 @@ if file and api_key:
             invoke_chain(message)
 else:
     st.session_state["messages"] = []
-
-
-if not file:
-    st.warning("Please upload a :blue[File] on the sidebar.")
-
-if not api_key:
-    st.warning("Please provide an :blue[OpenAI API Key] on the sidebar.")
