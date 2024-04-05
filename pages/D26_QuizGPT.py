@@ -146,10 +146,6 @@ if api_key:
             ],
         )
 
-        """ prompt_with_difficulty = PromptTemplate.from_template(
-            "Make a quiz about {subject} with {difficulty} difficulty in Korean.",
-        ) """
-
         prompt = PromptTemplate.from_template(
             """            
             Please create a quiz based on the following criteria:
