@@ -34,24 +34,31 @@ with st.expander("과제 내용 보기", expanded=False):
 
 with st.sidebar:
     if "api_key" not in st.session_state:
-        st.session_state.api_key = ""
+        st.session_state["api_key"] = ""
 
-    api_key = st.text_input(
+    if "quiz_subject" not in st.session_state:
+        st.session_state["quiz_subject"] = ""
+
+    api_key_input = st.empty()
+
+    def reset_api_key():
+        st.session_state["api_key"] = ""
+        print(st.session_state["api_key"])
+
+    if st.button(":red[Reset API_KEY]"):
+        reset_api_key()
+
+    api_key = api_key_input.text_input(
         ":blue[OpenAI API_KEY]",
         value=st.session_state["api_key"],
         key="api_key_input",
     )
-    st.session_state["api_key"] = api_key
+
+    if api_key != st.session_state["api_key"]:
+        st.session_state["api_key"] = api_key
+        st.rerun()
 
     print(api_key)
-
-    def reset_api_key():
-        st.session_state["api_key"] = ""
-        print(st.session_state.api_key)
-
-    if st.button(":red[Reset API_KEY]"):
-        reset_api_key()
-        st.rerun()
 
     st.divider()
     st.markdown(
@@ -60,13 +67,42 @@ with st.sidebar:
         """
     )
 
-if api_key:
+if not api_key:
+    st.warning("Please provide an :blue[OpenAI API Key] on the sidebar.")
+
+else:
     try:
-        st.markdown(
+
+        @st.cache_data(show_spinner="퀴즈를 맛있게 굽고 있어요...")
+        def run_quiz_chain(*, subject, count, difficulty):
+            chain = prompt | llm
+            return chain.invoke(
+                {
+                    "subject": subject,
+                    "count": count,
+                    "difficulty": difficulty,
+                }
+            )
+
+        col1, col2 = st.columns([4, 1])
+
+        with col1:
+            st.markdown(
+                """
+            #### 자~ 이제 퀴즈를 만들어 볼까요?
             """
-        #### 자~ 이제 퀴즈를 만들어 볼까요?
-        """
-        )
+            )
+        with col2:
+
+            def reset_quiz():
+                quiz_subject = ""
+                st.session_state["quiz_subject"] = ""
+                run_quiz_chain.clear()
+
+            # 제대로 동작하지 않음. => 수정 필요
+            if st.button(":red[퀴즈 초기화]"):
+                reset_quiz()
+
         with st.form("quiz_create_form"):
 
             col1, col2, col3 = st.columns([3, 1, 1])
@@ -75,6 +111,7 @@ if api_key:
                 quiz_subject = st.text_input(
                     ":blue[주제]",
                     placeholder="무엇을 주제로 퀴즈를 만들까요?",
+                    value=st.session_state["quiz_subject"],
                     # label_visibility="collapsed",
                 )
 
@@ -162,18 +199,8 @@ if api_key:
             """,
         )
 
-        @st.cache_data(show_spinner="퀴즈를 맛있게 굽고 있어요...")
-        def run_quiz_chain(*, subject, count, difficulty):
-            chain = prompt | llm
-            return chain.invoke(
-                {
-                    "subject": subject,
-                    "count": count,
-                    "difficulty": difficulty,
-                }
-            )
-
         if quiz_subject:
+            response_box = st.empty()
             response = run_quiz_chain(
                 subject=quiz_subject,
                 count=quiz_count,
@@ -181,7 +208,6 @@ if api_key:
             )
             response = response.additional_kwargs["function_call"]["arguments"]
             response = json.loads(response)
-            response_box = st.empty()
 
             generated_quiz_count = len(response["questions"])
 
@@ -226,17 +252,20 @@ if api_key:
                     for _ in range(3):
                         st.balloons()
 
-                if submitted:
-                    with result:
-                        if solved_count == generated_quiz_count:
-                            st.subheader(
-                                f"결과: :blue[{correct_count}] / {generated_quiz_count}"
-                            )
+                if solved_count == generated_quiz_count:
+                    result.subheader(
+                        f"결과: :blue[{correct_count}] / {generated_quiz_count}"
+                    )
+                print("submitted: ", submitted)
 
-                        else:
-                            st.error(
-                                f"퀴즈를 모두 풀고 제출해 주세요. ( 남은 퀴즈 개수: :red[{generated_quiz_count - solved_count}] / 답변한 퀴즈 개수: :blue[{solved_count}] )"
-                            )
+                if submitted:
+                    print("submitted: ", submitted)
+
+                    if solved_count < generated_quiz_count:
+                        result.error(
+                            f"퀴즈를 모두 풀고 제출해 주세요. ( 남은 퀴즈 개수: :red[{generated_quiz_count - solved_count}] / 답변한 퀴즈 개수: :blue[{solved_count}] )"
+                        )
+
     except Exception as e:
         if (
             "api_key" in str(e)
@@ -246,7 +275,9 @@ if api_key:
         ):
             st.error("API_KEY 를 확인해 주세요.")
         st.expander("Error Details", expanded=True).write(f"Error: {e}")
-        response_box.json(response)
+
+        if "response" in locals():
+            response_box.json(response)
 
 
 end_time = datetime.now()
