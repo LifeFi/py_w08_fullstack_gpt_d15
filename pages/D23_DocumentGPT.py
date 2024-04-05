@@ -19,7 +19,7 @@ import os
 
 # Steramlit code
 st.set_page_config(
-    page_title="D23 | FullstackGPT 과제",
+    page_title="D23 | DocumentGPT",
     page_icon="🌪️",
 )
 

@@ -9,8 +9,8 @@ st.markdown(
     """
 # Streamlit 과제
 
-- [X] D23 ~ D25 : D19 과제를 Streamlit으로 만들고 배포.
-- [ ] D26 ~ D28 :
+- [X] D23 ~ D25 : DocumentGPT
+- [X] D26 ~ D28 : QuizGPT Turbo
 - [ ] D29 ~ D30 :
 - [ ] D31 ~ D32 :
 - [ ] D33 ~ D35 : Final
