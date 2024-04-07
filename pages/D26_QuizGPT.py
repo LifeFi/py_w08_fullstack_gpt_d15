@@ -36,9 +36,6 @@ with st.sidebar:
     if "api_key" not in st.session_state:
         st.session_state["api_key"] = ""
 
-    if "quiz_subject" not in st.session_state:
-        st.session_state["quiz_subject"] = ""
-
     api_key_input = st.empty()
 
     def reset_api_key():
@@ -58,7 +55,7 @@ with st.sidebar:
         st.session_state["api_key"] = api_key
         st.rerun()
 
-    print(api_key)
+    # print(api_key)
 
     st.divider()
     st.markdown(
@@ -72,6 +69,14 @@ if not api_key:
 
 else:
     try:
+        if "quiz_subject" not in st.session_state:
+            st.session_state["quiz_subject"] = ""
+
+        if "quiz_submitted" not in st.session_state:
+            st.session_state["quiz_submitted"] = False
+
+        def set_quiz_submitted(value: bool):
+            st.session_state.update({"quiz_submitted": value})
 
         @st.cache_data(show_spinner="퀴즈를 맛있게 굽고 있어요...")
         def run_quiz_chain(*, subject, count, difficulty):
@@ -95,13 +100,13 @@ else:
         with col2:
 
             def reset_quiz():
-                quiz_subject = ""
                 st.session_state["quiz_subject"] = ""
                 run_quiz_chain.clear()
 
             # 제대로 동작하지 않음. => 수정 필요
             if st.button(":red[퀴즈 초기화]"):
                 reset_quiz()
+                set_quiz_submitted(False)
 
         with st.form("quiz_create_form"):
 
@@ -131,7 +136,12 @@ else:
                     # label_visibility="collapsed",
                 )
 
-            st.form_submit_button(":blue[퀴즈 만들기 시작]", use_container_width=True)
+            st.form_submit_button(
+                "**:blue[퀴즈 만들기 시작]**",
+                use_container_width=True,
+                on_click=set_quiz_submitted,
+                args=(False,),
+            )
 
         function = {
             "name": "create_quiz",
@@ -214,6 +224,9 @@ else:
             with st.form("quiz_questions_form"):
                 solved_count = 0
                 correct_count = 0
+                answer_feedback_box = []
+                answer_feedback_content = []
+
                 for index, question in enumerate(response["questions"]):
                     st.write(f"{index+1}. {question['question']}")
                     value = st.radio(
@@ -221,50 +234,84 @@ else:
                         [answer["answer"] for answer in question["answers"]],
                         index=None,
                         label_visibility="collapsed",
-                        key=f"question_{index}",
+                        key=f"[{quiz_subject}_{quiz_count}_{quiz_difficulty}]question_{index}",
                     )
+
+                    answer_feedback = st.empty()
+                    answer_feedback_box.append(answer_feedback)
+
                     if value:
                         solved_count += 1
+
                         if {"answer": value, "correct": True} in question["answers"]:
-                            st.success("정답! :100:")
+                            answer_feedback_content.append(
+                                {
+                                    "index": index,
+                                    "correct": True,
+                                    "feedback": "정답! :100:",
+                                }
+                            )
+                            # st.success("정답! :100:")
                             correct_count += 1
                         else:
-                            st.error("다시 도전해 보아요! :sparkles:")
+                            # st.error("다시 도전해 보아요! :sparkles:")
+                            answer_feedback_content.append(
+                                {
+                                    "index": index,
+                                    "correct": False,
+                                    "feedback": "다시 도전해 보아요! :sparkles:",
+                                }
+                            )
+                            # answer_feedback_content[index] = st.error(
+                            #     "다시 도전해 보아요! :sparkles:"
+                            # )
+
+                is_quiz_all_submitted = solved_count == generated_quiz_count
+
+                if is_quiz_all_submitted:
+                    for answer_feedback in answer_feedback_content:
+                        index = answer_feedback["index"]
+                        with answer_feedback_box[index]:
+                            if answer_feedback["correct"]:
+                                st.success(answer_feedback["feedback"])
+                            else:
+                                st.error(answer_feedback["feedback"])
+
                 st.divider()
-                # st.write(solved_count, correct_count, generated_quiz_count)
 
                 result = st.empty()
 
-                submitted = st.form_submit_button(
+                st.form_submit_button(
                     (
-                        ":blue[제출하기]"
+                        "**:blue[제출하기]**"
                         if solved_count < generated_quiz_count
                         else (
-                            ":blue[:100: 축하합니다~ 새로운 주제로 도전해 보세요!]"
+                            "**:blue[:100: 축하합니다~ 새로운 주제로 도전해 보세요!]**"
                             if correct_count == generated_quiz_count
-                            else ":blue[다시 도전 💪]"
+                            else "**:blue[다시 도전 💪]**"
                         )
                     ),
                     use_container_width=True,
                     disabled=correct_count == generated_quiz_count,
+                    # on_click=lambda: setattr(st.session_state, "submitted", True), 동일함.
+                    on_click=set_quiz_submitted,
+                    args=(True,),
                 )
-                if correct_count == generated_quiz_count:
-                    for _ in range(3):
-                        st.balloons()
 
-                if solved_count == generated_quiz_count:
-                    result.subheader(
-                        f"결과: :blue[{correct_count}] / {generated_quiz_count}"
-                    )
-                print("submitted: ", submitted)
+                if st.session_state["quiz_submitted"]:
 
-                if submitted:
-                    print("submitted: ", submitted)
-
-                    if solved_count < generated_quiz_count:
+                    if not is_quiz_all_submitted:
                         result.error(
                             f"퀴즈를 모두 풀고 제출해 주세요. ( 남은 퀴즈 개수: :red[{generated_quiz_count - solved_count}] / 답변한 퀴즈 개수: :blue[{solved_count}] )"
                         )
+                    else:
+                        result.subheader(
+                            f"결과: :blue[{correct_count}] / {generated_quiz_count}"
+                        )
+
+                    if correct_count == generated_quiz_count:
+                        for _ in range(3):
+                            st.balloons()
 
     except Exception as e:
         if (
