@@ -1,4 +1,5 @@
 import json
+import re
 from langchain.chat_models import ChatOpenAI
 from langchain.prompts import PromptTemplate
 from langchain.schema import BaseOutputParser
@@ -81,6 +82,7 @@ else:
         @st.cache_data(show_spinner="퀴즈를 맛있게 굽고 있어요...")
         def run_quiz_chain(*, subject, count, difficulty):
             chain = prompt | llm
+
             return chain.invoke(
                 {
                     "subject": subject,
@@ -314,13 +316,12 @@ else:
                             st.balloons()
 
     except Exception as e:
-        if (
-            "api_key" in str(e)
-            or "api-key" in str(e)
-            or "API key" in str(e)
-            or "API Key" in str(e)
-        ):
+
+        e_str = str(e).lower()
+        match = re.search(r"(api)(_|-|\s)(key)", e_str)
+        if match:
             st.error("API_KEY 를 확인해 주세요.")
+
         st.expander("Error Details", expanded=True).write(f"Error: {e}")
 
         if "response" in locals():
