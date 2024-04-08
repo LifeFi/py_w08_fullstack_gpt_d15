@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 from langchain.document_loaders import SitemapLoader
 from langchain.chat_models import ChatOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -12,10 +13,7 @@ from langchain.schema.runnable import RunnableLambda
 from langchain.schema.runnable import RunnablePassthrough
 from langchain.schema import BaseOutputParser
 from langchain.memory import ConversationBufferMemory
-
-
 import streamlit as st
-from datetime import datetime
 
 # START LOG: script run/rerun
 if "run_count" not in st.session_state:
@@ -43,7 +41,7 @@ with st.expander("과제 내용 보기", expanded=False):
         - [AI Gateway](https://developers.cloudflare.com/ai-gateway/)
         - [Cloudflare Vectorize](https://developers.cloudflare.com/vectorize/)
         - [Workers AI](https://developers.cloudflare.com/workers-ai/)
-    - [사이트맵](https://www.cloudflare.com/sitemap.xml)을 사용하여 각 제품에 대한 공식문서를 찾아보세요.
+    - [사이트맵](https://developers.cloudflare.com/sitemap.xml)을 사용하여 각 제품에 대한 공식문서를 찾아보세요.
     - 여러분이 제출한 내용은 다음 질문으로 테스트됩니다:
         - llama-2-7b-chat-fp16 모델의 1M 입력 토큰당 가격은 얼마인가요?
             - :blue[What is the price per 1M input tokens of the llama-2-7b-chat-fp16 model?]
