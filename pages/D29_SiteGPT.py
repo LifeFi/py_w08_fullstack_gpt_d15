@@ -17,9 +17,9 @@ from langchain.memory import ConversationBufferMemory
 import streamlit as st
 from datetime import datetime
 
+# START LOG: script run/rerun
 if "run_count" not in st.session_state:
     st.session_state["run_count"] = 0
-
 st.session_state["run_count"] += 1
 
 start_time = datetime.now()
@@ -164,10 +164,8 @@ def load_website(url):
         parsing_function=parse_page,
     )
     loader.requests_per_second = 5
-
-    # os.makedirs("./.cache/sitegpt/files", exist_ok=True)
     docs = loader.load_and_split(text_splitter=splitter)
-    print(docs)
+    # print(docs)
     return docs
 
 
@@ -179,11 +177,7 @@ def embeded_docs(_docs, url_name):
     # https://platform.openai.com/account/limits
     embeddings = OpenAIEmbeddings(
         api_key=api_key,
-        # request_timeout=20,
     )
-
-    # embeddings.update_forward_refs()
-
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
     vector_store = FAISS.from_documents(_docs, cached_embeddings)
     retriever = vector_store.as_retriever()
@@ -288,11 +282,9 @@ memory = ConversationBufferMemory(
 )
 
 
+# [ 아직 미사용 ] => 이전 답변에서 유사한 질문 있는지 검색할때 사용할 예정
 def load_memory(_):
     return memory.load_memory_variables({})["chat_history"]
-
-
-# streamlit code
 
 
 def save_message(message, role):
@@ -366,10 +358,9 @@ if api_key and url:
                 st.error("API_KEY 를 확인해 주세요.")
 
             st.expander("Error Details", expanded=True).write(f"Error: {e}")
-
             docs_box.write(docs)
 
-
+# END LOG: script run/rerun
 end_time = datetime.now()
 elapsed_time = end_time - start_time
 elapsed_seconds = elapsed_time.total_seconds()
