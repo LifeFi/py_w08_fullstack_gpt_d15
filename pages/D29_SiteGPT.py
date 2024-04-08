@@ -1,7 +1,4 @@
-import json
 import re
-import os
-
 from langchain.document_loaders import SitemapLoader
 from langchain.chat_models import ChatOpenAI
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -83,14 +80,13 @@ with st.sidebar:
         st.session_state["api_key"] = api_key
         st.rerun()
 
-    # print(api_key)
-
     url = st.text_input(
         "**:blue[Write down a URL]**",
         placeholder="https://example.com",
         value="https://developers.cloudflare.com/sitemap.xml",
     )
-    url_name = url.split("://")[1].split("/")[0] if url else None
+    # 폴더 이름으로 사용.
+    url_name = url.split("://")[1].replace("/", "_") if url else None
 
     st.divider()
     st.markdown(
@@ -114,15 +110,17 @@ class ChatCallbackHandler(BaseCallbackHandler):
         self.message_box.markdown(self.message)
 
 
+# 최종 결과만 화면에 출력하고자 함.
+# - ChatCallbackHandler 수정이 복잡하게 느껴져 llm 를 용도별로 분리.
 llm_for_backstage = ChatOpenAI(
     temperature=0.1,
-    api_key=api_key if api_key else "1",
+    api_key=api_key if api_key else "_",
 )
 
 
 llm = ChatOpenAI(
     temperature=0.1,
-    api_key=api_key if api_key else "1",
+    api_key=api_key if api_key else "_",
     streaming=True,
     callbacks=[
         ChatCallbackHandler(),
@@ -131,6 +129,7 @@ llm = ChatOpenAI(
 
 
 def parse_page(soup):
+    # 대상 페이지와 무관한 내용이나 참고용으로 남겨둠.
     header = soup.find("header")
     footer = soup.find("footer")
     if header:
@@ -141,14 +140,11 @@ def parse_page(soup):
         str(soup.get_text())
         .replace("\n", " ")
         .replace("\xa0", " ")
-        .replace("CloseSearch Submit Blog", "")
+        # .replace("CloseSearch Submit Blog", "")
     )
 
 
-@st.cache_data(
-    show_spinner="Loading website...",
-    persist="disk",
-)
+@st.cache_data(persist="disk", show_spinner="Loading website...")
 def load_website(url):
     splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
         chunk_size=1000,
@@ -162,7 +158,7 @@ def load_website(url):
                 r"https:\/\/developers.cloudflare.com/vectorize.*",
                 r"https:\/\/developers.cloudflare.com/workers-ai.*",
             ]
-            if url_name == "developers.cloudflare.com"
+            if "developers.cloudflare.com" in url_name
             else None
         ),
         parsing_function=parse_page,
@@ -175,10 +171,7 @@ def load_website(url):
     return docs
 
 
-@st.cache_data(
-    show_spinner="Embedding docs...",
-    persist="disk",
-)
+@st.cache_data(persist="disk", show_spinner="Embedding docs...")
 def embeded_docs(_docs, url_name):
     cache_dir = LocalFileStore(f"./.cache/sitegpt/embeddings/{url_name}")
 
@@ -192,7 +185,7 @@ def embeded_docs(_docs, url_name):
     # embeddings.update_forward_refs()
 
     cached_embeddings = CacheBackedEmbeddings.from_bytes_store(embeddings, cache_dir)
-    vector_store = FAISS.from_documents(docs, cached_embeddings)
+    vector_store = FAISS.from_documents(_docs, cached_embeddings)
     retriever = vector_store.as_retriever()
 
     return retriever
@@ -337,7 +330,7 @@ if api_key and url:
     else:
         try:
             docs = load_website(url)
-            # st.write(docs)
+            docs_box = st.empty()
             retriever = embeded_docs(docs, url_name)
             send_message("I'm ready! Ask away!", "ai", save=False)
             paint_history()
@@ -356,19 +349,15 @@ if api_key and url:
                 )
 
                 def invoke_chain(question):
-                    # print(chain)
-
                     result = chain.invoke(question)
                     memory.save_context(
                         {"input": question},
                         {"output": result.content},
                     )
-                    # print(result.content)
                     return result
 
                 with st.chat_message("ai"):
                     invoke_chain(message)
-                # st.markdown(result.content.replace("$", "\$"))
 
         except Exception as e:
             e_str = str(e).lower()
@@ -378,9 +367,7 @@ if api_key and url:
 
             st.expander("Error Details", expanded=True).write(f"Error: {e}")
 
-            if "response" in locals():
-                # response_box.json(response)
-                pass
+            docs_box.write(docs)
 
 
 end_time = datetime.now()
