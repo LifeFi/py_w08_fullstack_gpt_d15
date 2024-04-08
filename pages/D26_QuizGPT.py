@@ -7,9 +7,14 @@ from langchain.schema import BaseOutputParser
 import streamlit as st
 from datetime import datetime
 
+if "run_count" not in st.session_state:
+    st.session_state["run_count"] = 0
+
+st.session_state["run_count"] += 1
+
 start_time = datetime.now()
 print(
-    f"\n\033[43mSTART Exec: {start_time.strftime('%H:%M:%S.%f')} =========================================\033[0m"
+    f"\n\033[43mSTART Exec[{st.session_state['run_count']}]: {start_time.strftime('%H:%M:%S.%f')} =========================================\033[0m"
 )
 
 st.set_page_config(
@@ -22,7 +27,7 @@ with st.expander("과제 내용 보기", expanded=False):
     # st.snow()
     st.markdown(
         """
-    ### D63 (2024-04-05) 과제
+    ### D26 (2024-04-05) 과제
     QuizGPT를 구현하되 다음 기능을 추가합니다:
     - 함수 호출을 사용합니다.
     - 유저가 시험의 난이도를 커스터마이징 할 수 있도록 하고 LLM이 어려운 문제 또는 쉬운 문제를 생성하도록 합니다.
@@ -332,5 +337,5 @@ end_time = datetime.now()
 elapsed_time = end_time - start_time
 elapsed_seconds = elapsed_time.total_seconds()
 print(
-    f"\n\033[43mEND Exec: {elapsed_seconds}s / {end_time.strftime('%H:%M:%S.%f')} =========================================\033[0m"
+    f"\n\033[43mEND Exec[{st.session_state['run_count']}]: {elapsed_seconds}s / {end_time.strftime('%H:%M:%S.%f')} =========================================\033[0m"
 )

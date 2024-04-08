@@ -11,7 +11,7 @@ st.markdown(
 
 - [X] D23 ~ D25 : DocumentGPT
 - [X] D26 ~ D28 : QuizGPT Turbo
-- [ ] D29 ~ D30 :
+- [X] D29 ~ D30 : SiteGPT
 - [ ] D31 ~ D32 :
 - [ ] D33 ~ D35 : Final
 

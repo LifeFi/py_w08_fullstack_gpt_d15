@@ -1,7 +1,8 @@
 from langchain.chat_models import ChatOpenAI
 from langchain.document_loaders import UnstructuredFileLoader
 from langchain.text_splitter import CharacterTextSplitter
-from langchain.embeddings import OpenAIEmbeddings, CacheBackedEmbeddings
+from langchain.embeddings import OpenAIEmbeddings
+from langchain.embeddings import CacheBackedEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.storage import LocalFileStore
 from langchain.prompts import ChatPromptTemplate
@@ -19,7 +20,7 @@ import os
 
 # Steramlit code
 st.set_page_config(
-    page_title="D23 | DocumentGPT",
+    page_title="DocumentGPT | D23 과제",
     page_icon="🌪️",
 )
 
