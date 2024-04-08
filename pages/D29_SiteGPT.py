@@ -276,7 +276,7 @@ def choose_answer(inputs):
     question = inputs["question"]
     choose_chain = choose_prompt | llm
     condensed = "\n\n".join(
-        f"{answer['answer']}\nSource:{answer['source']}\nDate:{answer['date']}\n"
+        f"{answer['answer']}\n\nSource:{answer['source']}\nDate:{answer['date']}\n"
         for answer in answers
     )
     return choose_chain.invoke(
