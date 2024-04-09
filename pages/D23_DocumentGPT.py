@@ -24,7 +24,7 @@ st.set_page_config(
     page_icon="🌪️",
 )
 
-print(os.getcwd())
+st.write(os.getcwd())
 
 with st.sidebar:
     # date = datetime.today().strftime("%Y-%m-%d %H:%M:%S")
