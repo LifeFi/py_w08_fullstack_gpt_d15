@@ -6,6 +6,9 @@ from langchain.utilities.duckduckgo_search import DuckDuckGoSearchAPIWrapper
 from openai import OpenAI
 import yfinance
 import streamlit as st
+import nest_asyncio
+
+nest_asyncio.apply()
 
 # START LOG: script run/rerun
 if "run_count" not in st.session_state:
