@@ -44,11 +44,11 @@ with st.sidebar:
     )
     st.session_state["api_key"] = api_key
 
-    print(api_key)
+    # print(api_key)
 
     def reset_api_key():
         st.session_state["api_key"] = ""
-        print(st.session_state.api_key)
+        # print(st.session_state.api_key)
 
     if st.button(":red[Reset API_KEY]"):
         reset_api_key()
@@ -166,12 +166,12 @@ except Exception as e:
         st.error(f"Error: {e}")
     st.stop()
 
-print(llm, "=======================================")
-print(llm.openai_api_key, "=======================================")
-print(api_key, "=======================================")
+# print(llm, "=======================================")
+# print(llm.openai_api_key, "=======================================")
+# print(api_key, "=======================================")
 
 
-@st.cache_data(show_spinner="Embedding file...")
+@st.cache_resource(show_spinner="Embedding file...")
 def embed_file(file):
     os.makedirs("./.cache/files", exist_ok=True)
     file_content = file.read()
@@ -282,7 +282,7 @@ if file and api_key:
         )
 
         def invoke_chain(question):
-            print(chain)
+            # print(chain)
 
             try:
                 result = chain.invoke(question)

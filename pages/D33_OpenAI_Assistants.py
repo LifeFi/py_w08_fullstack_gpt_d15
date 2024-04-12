@@ -31,19 +31,16 @@ st.set_page_config(
     page_icon="📃",
 )
 
-st.title("D31 | AgentGPT")
+st.title("D33 | OpenAI Assistants (졸업 과제)")
 with st.expander("과제 내용 보기", expanded=False):
     # st.snow()
     st.markdown(
         """
     ### D31 (2024-04-10) 과제
-    - 새로운 Jupyter notebook에서 리서치 AI 에이전트를 만들고 커스텀 도구를 부여합니다.
-    - 에이전트는 다음 작업을 수행할 수 있어야 합니다:
-        - Wikipedia에서 검색
-        - DuckDuckGo에서 검색
-        - 웹사이트의 텍스트를 스크랩하고 추출합니다.
-        - 리서치 결과를 .txt 파일에 저장하기
-    - 다음 쿼리로 에이전트를 실행합니다: "Research about the XZ backdoor" 라는 쿼리로 에이전트를 실행하면, 에이전트는 Wikipedia 또는 DuckDuckGo에서 검색을 시도하고, DuckDuckGo에서 웹사이트를 찾으면 해당 웹사이트에 들어가서 콘텐츠를 추출한 다음 .txt 파일에 조사 내용을 저장하는 것으로 완료해야 합니다.
+    - 이전 과제에서 만든 에이전트를 OpenAI 어시스턴트로 리팩터링합니다.
+    - 대화 기록을 표시하는 Streamlit 을 사용하여 유저 인터페이스를 제공하세요.
+    - 유저가 자체 OpenAI API 키를 사용하도록 허용하고,`st.sidebar` 내부의 `st.input`에서 이를 로드합니다.
+    - `st.sidebar`를 사용하여 Streamlit app 의 코드과 함께 깃허브 리포지토리에 링크를 넣습니다.
     
     """
     )
@@ -234,11 +231,7 @@ if api_key:
         query = st.text_input(
             "What do you want reaearch about?",
             key="query_input",
-            value=(
-                "Research about the XZ backdoor"
-                if st.session_state["query"] == ""
-                else st.session_state["query"]
-            ),
+            value="Research about the XZ backdoor",
             label_visibility="collapsed",
         )
     with col2:
@@ -248,34 +241,6 @@ if api_key:
             type="primary",
             use_container_width=True,
         )
-
-    with st.status("Running the agent...") as status:
-        print(f'st.session_state["query"]: {st.session_state["query"]}')
-        print(f"query: {query}")
-
-        if query and query != st.session_state["query"] and run_agent:
-            result = agent_invoke(query)
-            st.session_state["query"] = query
-            st.session_state["result"] = result
-
-        elif st.session_state["result"]:
-            result = st.session_state["result"]
-
-        else:
-            result = ""
-            status.update(
-                label="I'm ready!",
-                state="complete",
-                expanded=True,
-            )
-
-        if result:
-            st.write(result)
-            status.update(
-                label="Completed successfully!",
-                state="complete",
-                expanded=True,
-            )
 
 
 # END LOG: script run/rerun

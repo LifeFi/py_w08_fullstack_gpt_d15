@@ -142,7 +142,7 @@ def parse_page(soup):
     )
 
 
-@st.cache_data(persist="disk", show_spinner="Loading website...")
+@st.cache_resource(show_spinner="Loading website...")
 def load_website(url):
     splitter = RecursiveCharacterTextSplitter.from_tiktoken_encoder(
         chunk_size=1000,
@@ -167,7 +167,7 @@ def load_website(url):
     return docs
 
 
-@st.cache_data(persist="disk", show_spinner="Embedding docs...")
+@st.cache_resource(show_spinner="Embedding docs...")
 def embeded_docs(_docs, url_name):
     cache_dir = LocalFileStore(f"./.cache/sitegpt/embeddings/{url_name}")
 
@@ -350,6 +350,7 @@ if api_key and url:
                     invoke_chain(message)
 
         except Exception as e:
+            print(e)
             e_str = str(e).lower()
             match = re.search(r"(api)(_|-|\s)(key)", e_str)
             if match:
@@ -357,6 +358,7 @@ if api_key and url:
 
             st.expander("Error Details", expanded=True).write(f"Error: {e}")
             docs_box.write(docs)
+
 
 # END LOG: script run/rerun
 end_time = datetime.now()
