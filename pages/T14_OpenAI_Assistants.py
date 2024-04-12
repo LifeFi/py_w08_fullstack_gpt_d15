@@ -6,9 +6,10 @@ from langchain.utilities.duckduckgo_search import DuckDuckGoSearchAPIWrapper
 from openai import OpenAI
 import yfinance
 import streamlit as st
-import nest_asyncio
 
-nest_asyncio.apply()
+# import nest_asyncio
+
+# nest_asyncio.apply()
 
 # START LOG: script run/rerun
 if "run_count" not in st.session_state:
@@ -305,21 +306,21 @@ if st.button("Submit Tool Outputs", type="primary"):
     result = submit_tool_outputs(run.id, thread.id)
 
 
-async def get_run_status(run_id, thread_id):
-    with run_status_box.status("Getting Run Status...") as status:
-        # status : [ "queued", "in_progress", "completed", "requires_action", "expired", "cancelling", "cancelled", "failed" ]
-        waiting_state = ("queued", "in_progress", "cancelling")
-        while True:
-            run = get_run(run_id, thread_id)
-            if run.status not in waiting_state:
-                status.update(label=run.status, state="complete")
-                break
-            status.update(label=run.status, state="running")
-            await asyncio.sleep(1)
+# async def get_run_status(run_id, thread_id):
+#     with run_status_box.status("Getting Run Status...") as status:
+#         # status : [ "queued", "in_progress", "completed", "requires_action", "expired", "cancelling", "cancelled", "failed" ]
+#         waiting_state = ("queued", "in_progress", "cancelling")
+#         while True:
+#             run = get_run(run_id, thread_id)
+#             if run.status not in waiting_state:
+#                 status.update(label=run.status, state="complete")
+#                 break
+#             status.update(label=run.status, state="running")
+#             await asyncio.sleep(1)
 
 
-asyncio.run(get_run_status(run.id, thread.id))
-st.write(":red[asyncio.run() Done!]")
+# asyncio.run(get_run_status(run.id, thread.id))
+# st.write(":red[asyncio.run() Done!]")
 
 
 with st.status(":red[Polling Run Status...]", expanded=True) as status:
