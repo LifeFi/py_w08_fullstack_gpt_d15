@@ -13,6 +13,9 @@ from langchain.utilities import WikipediaAPIWrapper
 from langchain.prompts import PromptTemplate
 from langchain.document_loaders import WebBaseLoader
 from langchain.schema.runnable import RunnablePassthrough
+import nest_asyncio
+
+nest_asyncio.apply()
 
 if "run_count" not in st.session_state:
     st.session_state["run_count"] = 0
@@ -167,9 +170,9 @@ class SaveToFileTool(BaseTool):
     args_schema: Type[SaveToFileToolArgsSchema] = SaveToFileToolArgsSchema
 
     def _run(self, text, file_path):
-        rearch_dt = datetime.now().strftime("%Y%m%d_%H%M%S")
+        research_dt = datetime.now().strftime("%Y%m%d_%H%M%S")
         os.makedirs("./outputs", exist_ok=True)
-        file_name = f"./outputs/{rearch_dt}_{file_path}"
+        file_name = f"./outputs/{research_dt}_{file_path}"
 
         with open(file_name, "w", encoding="utf-8") as f:
             f.write(text)
@@ -182,7 +185,7 @@ class SaveToFileTool(BaseTool):
             mime="text/plain",
         )
 
-        return f"Text saved to {rearch_dt}_{file_path}"
+        return f"Text saved to {research_dt}_{file_path}"
 
 
 def agent_invoke(input):
