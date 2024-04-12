@@ -84,6 +84,7 @@ if "result" not in st.session_state:
 
 llm = ChatOpenAI(
     temperature=0.1,
+    api_key=api_key if api_key else "_",
 )
 
 
