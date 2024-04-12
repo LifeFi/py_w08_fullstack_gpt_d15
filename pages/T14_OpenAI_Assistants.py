@@ -321,15 +321,15 @@ async def get_run_status(run_id, thread_id):
 asyncio.run(get_run_status(run.id, thread.id))
 st.write(":red[asyncio.run() Done!]")
 
-#
-# with st.status(":red[Polling Run Status...]", expanded=True) as status:
-#     run = client.beta.threads.runs.poll(
-#         run.id,
-#         thread.id,
-#         poll_interval_ms=500,
-#         timeout=10000,
-#     )
-#     status.update(label=run.status, state="complete")
+
+with st.status(":red[Polling Run Status...]", expanded=True) as status:
+    run = client.beta.threads.runs.poll(
+        run.id,
+        thread.id,
+        poll_interval_ms=500,
+        timeout=10000,
+    )
+    status.update(label=run.status, state="complete")
 
 
 get_messages(thread.id)
