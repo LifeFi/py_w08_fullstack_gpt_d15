@@ -5,10 +5,8 @@ import streamlit as st
 from langchain.utilities import DuckDuckGoSearchAPIWrapper
 from langchain.utilities import WikipediaAPIWrapper
 from langchain.document_loaders import WebBaseLoader
-from openai import OpenAI
+from openai import OpenAI, AuthenticationError
 
-# import nest_asyncio
-# nest_asyncio.apply()
 
 # START LOG: script run/rerun
 if "run_count" not in st.session_state:
@@ -212,6 +210,17 @@ def create_run(thread_id, assistant_id):
     )
 
 
+with st.sidebar:
+    if st.button("Recreate Assistant", use_container_width=True):
+        create_assistant.clear()
+
+    if st.button("Recreate Thread", use_container_width=True):
+        create_thread.clear()
+
+    if st.button("Recreate Run", use_container_width=True):
+        create_run.clear()
+
+
 def get_run(run_id, thread_id):
     return client.beta.threads.runs.retrieve(
         run_id=run_id,
@@ -322,7 +331,16 @@ def paint_chat_history():
                     )
 
 
-assistant = create_assistant()
+try:
+    assistant = create_assistant()
+
+except AuthenticationError as e:
+    st.error(f"Authentication 오류: API_KEY 를 확인해 주세요.")
+
+except Exception as e:
+    st.error(f"Error: {e}")
+
+
 add_log(
     f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[create assistant] | {assistant.id}"
 )
@@ -340,13 +358,29 @@ if message := st.chat_input("What do you want reaearch about?", key="message_inp
 
     send_chat_message(message, "user")
 
-    thread = create_thread(message)
+    try:
+        thread = create_thread(message)
+
+    except AuthenticationError as e:
+        st.error(f"Authentication 오류: API_KEY 를 확인해 주세요.")
+
+    except Exception as e:
+        st.error(f"Error: {e}")
+
     add_log(
         f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[create thread] | {thread.id}"
     )
 
     # create 시에는 status 가 무조건 queued 로 나옴 (run.status == "queued")
-    run = create_run(thread.id, assistant.id)
+    try:
+        run = create_run(thread.id, assistant.id)
+
+    except AuthenticationError as e:
+        st.error(f"Authentication 오류: API_KEY 를 확인해 주세요.")
+
+    except Exception as e:
+        st.error(f"Error: {e}")
+
     add_log(
         f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[create run] | :red[{run.status}] | {run.id}"
     )
@@ -404,17 +438,6 @@ if message := st.chat_input("What do you want reaearch about?", key="message_inp
         send_chat_message(result, "assistant")
         # last message도 paint_chat_history()로 렌더링 ( 다운로드 버튼 생성 쉽게 하기 위해 )
         st.rerun()
-
-with st.sidebar:
-    if st.button("Recreate Assistant", use_container_width=True):
-        create_assistant.clear()
-        st.write(assistant.id)
-
-    if st.button("Recreate Thread", use_container_width=True):
-        create_thread.clear()
-
-    if st.button("Recreate Run", use_container_width=True):
-        create_run.clear()
 
 
 # END LOG: script run/rerun

@@ -13,7 +13,8 @@ st.markdown(
 - [X] D26 ~ D28 : QuizGPT Turbo
 - [X] D29 ~ D30 : SiteGPT
 - [X] D31 ~ D32 : Agents
-- [ ] D33 ~ D35 : OpenAI Assistants ( Final )
+- [X] D33 ~ D35 : OpenAI Assistants ( Final )
+- [X] T14 : Chapter 14. OpenAI Assistants API Study
 
 """
 )
