@@ -344,7 +344,7 @@ def main():
             is_new_result = False
 
             with st.chat_message("assistant"):
-                with st.status(":red[Polling Run Status...]") as status:
+                with st.status(":blue[Polling Run Status...]") as status:
                     # st.write(run.id, " ===== ", run.status)
 
                     while True:
@@ -377,7 +377,9 @@ def main():
                         if run.status in ("expired", "cancelled", "failed"):
                             st.write(run.last_error)
                             status.update(
-                                label=run.status, state="error", expanded=True
+                                label=f":red[{run.status}]",
+                                state="error",
+                                expanded=True,
                             )
                             break
 
