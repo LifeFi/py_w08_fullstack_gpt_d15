@@ -80,7 +80,9 @@ with st.sidebar:
         for log in st.session_state["logs"]:
             log_box.write(log)
 
-    def add_log(log):
+    def add_log(*args, seperator=" | "):
+        log_message = f"{seperator}".join(str(arg) for arg in args)
+        log = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}{seperator}{log_message}"
         st.session_state["logs"].append(log)
         log_box.write(log)
 
@@ -334,9 +336,7 @@ def paint_chat_history():
 try:
     assistant = create_assistant()
 
-    add_log(
-        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[create assistant] | {assistant.id}"
-    )
+    add_log(":blue[create assistant]", assistant.id)
 
     if "message" not in st.session_state:
         st.session_state["message"] = ""
@@ -353,22 +353,17 @@ try:
 
         thread = create_thread(message)
 
-        add_log(
-            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[create thread] | {thread.id}"
-        )
+        add_log(":blue[create thread]", thread.id)
 
         # create 시에는 status 가 무조건 queued 로 나옴 (run.status == "queued")
 
         run = create_run(thread.id, assistant.id)
 
-        add_log(
-            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[create run] | :red[{run.status}] | {run.id}"
-        )
+        add_log(":blue[create run]", f":red[{run.status}]", run.id)
+
         # 정확한 상태를 알기 위해 retrieve 를 이용함.
         run = get_run(run.id, thread.id)
-        add_log(
-            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[get run] | :red[{run.status}] | {run.id}"
-        )
+        add_log(":blue[get run]", f":red[{run.status}]", run.id)
 
         is_new_result = False
 
@@ -383,9 +378,7 @@ try:
                         poll_interval_ms=500,
                         timeout=20,
                     )
-                    add_log(
-                        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[runs polling] | :red[{run.status}] |{run.id}"
-                    )
+                    add_log(":blue[runs polling]", f":red[{run.status}]", run.id)
 
                     polling_result_time = datetime.now()
                     formatted_polling_result_time = polling_result_time.strftime(
