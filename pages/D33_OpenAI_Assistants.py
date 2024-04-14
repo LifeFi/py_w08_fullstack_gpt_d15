@@ -81,7 +81,7 @@ with st.sidebar:
             log_box.write(log)
 
     def add_log(*args, seperator=" | "):
-        log_message = f"{seperator}".join(str(arg) for arg in args)
+        log_message = seperator.join(str(arg) for arg in args)
         log = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}{seperator}{log_message}"
         st.session_state["logs"].append(log)
         log_box.write(log)
