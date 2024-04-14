@@ -1,5 +1,0 @@
-
-
-It seems we have encountered an issue with accessing the content of the websites. The first URL attempted to load a page that requires JavaScript and cookies to continue, and the text content could not be retrieved. The second URL directed to a 404 - Not Found page, which means the content for that link is not available.
-
-Unfortunately, I cannot provide the text content from these websites. If there are alternative URLs or other specific aspects of Microsoft Copilot you would like to learn about, please let me know, and I can attempt to retrieve that information for you.

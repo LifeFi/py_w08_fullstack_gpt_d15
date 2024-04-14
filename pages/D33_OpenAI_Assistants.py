@@ -35,6 +35,8 @@ with st.expander("과제 내용 보기", expanded=False):
     - 대화 기록을 표시하는 Streamlit 을 사용하여 유저 인터페이스를 제공하세요.
     - 유저가 자체 OpenAI API 키를 사용하도록 허용하고,`st.sidebar` 내부의 `st.input`에서 이를 로드합니다.
     - `st.sidebar`를 사용하여 Streamlit app 의 코드과 함께 깃허브 리포지토리에 링크를 넣습니다.
+    - 예시 요청
+        - Research about the XZ backdoor
     
     """
     )
@@ -64,10 +66,28 @@ with st.sidebar:
     st.divider()
     st.markdown(
         """
-        GitHub 링크: https://github.com/LifeFi/py_w08_fullstack_gpt_d15/blob/d31_agents/d31_agents.ipynb
+        GitHub 링크: https://github.com/LifeFi/py_w08_fullstack_gpt_d15/blob/d33_final_assistant/pages/D33_OpenAI_Assistants.py
         """
     )
-    st.write("Research about the XZ backdoor")
+
+    log_box = st.expander(":blue[Assistant API Log]", expanded=True)
+
+    if "logs" not in st.session_state:
+        st.session_state["logs"] = []
+
+    if log_box.button("Clear Log"):
+        st.session_state["logs"] = []
+
+    def paint_logs():
+        for log in st.session_state["logs"]:
+            log_box.write(log)
+
+    def add_log(log):
+        st.session_state["logs"].append(log)
+        log_box.write(log)
+
+    paint_logs()
+
 
 if not api_key:
     st.warning("Please provide an **:blue[OpenAI API Key]** on the sidebar.")
@@ -96,33 +116,10 @@ def get_document_text(inputs):
     return docs[0].page_content
 
 
-def save_to_file(inputs):
-    text = inputs["text"]
-    file_path = inputs["file_path"]
-    research_dt = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-    os.makedirs("./outputs", exist_ok=True)
-    file_name = f"./outputs/{research_dt}_{file_path}"
-
-    with open(file_name, "w", encoding="utf-8") as f:
-        f.write(text)
-
-    file_bytes = open(file_name, "rb").read()
-
-    st.download_button(
-        label="Download file",
-        data=file_bytes,
-        file_name=f"{research_dt}_{file_path}",
-        mime="text/plain",
-        key=f"{research_dt}_{file_path}",
-    )
-    # return f"Text saved to {research_dt}_{file_path}"
-
-
 functions_map = {
     "get_websites_by_wikipedia_search": get_websites_by_wikipedia_search,
     "get_websites_by_duckduckgo_search": get_websites_by_duckduckgo_search,
     "get_document_text": get_document_text,
-    # "save_to_file": save_to_file,
 }
 
 functions = [
@@ -177,27 +174,6 @@ functions = [
             },
         },
     },
-    # {
-    #     "type": "function",
-    #     "function": {
-    #         "name": "save_to_file",
-    #         "description": "Use this tool to save the text to a file.",
-    #         "parameters": {
-    #             "type": "object",
-    #             "properties": {
-    #                 "text": {
-    #                     "type": "string",
-    #                     "description": "The text you will save to a file.",
-    #                 },
-    #                 "file_path": {
-    #                     "type": "string",
-    #                     "description": "Path of the file to save the text to.",
-    #                 },
-    #             },
-    #             "required": ["text", "file_path"],
-    #         },
-    #     },
-    # },
 ]
 
 
@@ -214,16 +190,6 @@ def create_assistant():
         model="gpt-4-1106-preview",
         tools=functions,
     )
-
-
-# if st.button("Recreate Assistant", type="primary"):
-#     create_assistant.clear()
-
-# with st.status("Creating Assistant...", expanded=True) as status:
-#     assistant = create_assistant()
-#     status.update(label="Assistant Created!", state="complete")
-
-# st.write(assistant.id)
 
 
 @st.cache_data
@@ -300,6 +266,27 @@ def submit_tool_outputs(run_id, thread_id):
     )
 
 
+def make_download_button(text, file_path):
+    research_dt = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    os.makedirs("./outputs", exist_ok=True)
+    file_name = f"./outputs/{research_dt}_{file_path}"
+
+    with open(file_name, "w", encoding="utf-8") as f:
+        f.write(text)
+
+    file_bytes = open(file_name, "rb").read()
+
+    return st.download_button(
+        label="Download file",
+        data=file_bytes,
+        file_name=f"{research_dt}_{file_path}",
+        mime="text/plain",
+        key=f"{research_dt}_{file_path}",
+        type="primary",
+    )
+    # return f"Text saved to {research_dt}_{file_path}"
+
+
 def save_chat_message(message, role):
     st.session_state["messages"].append({"message": message, "role": role})
 
@@ -309,8 +296,6 @@ def send_chat_message(message, role, save=True, download=True):
         st.markdown(message)
     if save:
         save_chat_message(message, role)
-    if role == "assistant" and download:
-        save_to_file({"text": message, "file_path": "research.txt"})
 
 
 def paint_chat_history():
@@ -324,12 +309,24 @@ def paint_chat_history():
             download=False,
         )
         if message["role"] == "assistant":
-            save_to_file(
-                {"text": message["message"], "file_path": f"{index}_research.txt"}
-            )
+            download_placholder = st.empty()
+            with download_placholder:
+                make_button = st.button("Make Download", key=f"make_download_{index}")
+
+            if make_button:
+                download_placholder.empty()
+                with download_placholder:
+                    make_download_button(
+                        text=message["message"],
+                        file_path=f"{index}_research.txt",
+                    )
 
 
 assistant = create_assistant()
+add_log(
+    f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[create assistant] | {assistant.id}"
+)
+
 
 if "message" not in st.session_state:
     st.session_state["message"] = ""
@@ -337,58 +334,87 @@ if "message" not in st.session_state:
 send_chat_message("I'm ready! Ask away!", "assistant", save=False, download=False)
 paint_chat_history()
 
+
 if message := st.chat_input("What do you want reaearch about?", key="message_input"):
     st.session_state["message"] = message
 
     send_chat_message(message, "user")
 
     thread = create_thread(message)
+    add_log(
+        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[create thread] | {thread.id}"
+    )
 
     # create 시에는 status 가 무조건 queued 로 나옴 (run.status == "queued")
     run = create_run(thread.id, assistant.id)
+    add_log(
+        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[create run] | :red[{run.status}] | {run.id}"
+    )
     # 정확한 상태를 알기 위해 retrieve 를 이용함.
     run = get_run(run.id, thread.id)
+    add_log(
+        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[get run] | :red[{run.status}] | {run.id}"
+    )
 
     is_new_result = False
+
     with st.chat_message("assistant"):
         with st.status(":red[Polling Run Status...]") as status:
             # st.write(run.id, " ===== ", run.status)
-            while True:
-                run = client.beta.threads.runs.poll(
-                    run.id,
-                    thread.id,
-                    poll_interval_ms=500,
-                    timeout=20,
-                )
+            try:
+                while True:
+                    run = client.beta.threads.runs.poll(
+                        run.id,
+                        thread.id,
+                        poll_interval_ms=500,
+                        timeout=20,
+                    )
+                    add_log(
+                        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[runs polling] | :red[{run.status}] |{run.id}"
+                    )
 
-                polling_result_time = datetime.now()
-                formatted_polling_result_time = polling_result_time.strftime(
-                    "%Y-%m-%d %H:%M:%S.%f"
-                )[
-                    :-3
-                ]  # milliseconds
-                st.write(f"{formatted_polling_result_time} : :blue[{run.status}]")
+                    polling_result_time = datetime.now()
+                    formatted_polling_result_time = polling_result_time.strftime(
+                        "%Y-%m-%d %H:%M:%S.%f"
+                    )[
+                        :-3
+                    ]  # milliseconds
+                    st.write(f"{formatted_polling_result_time} : :blue[{run.status}]")
 
-                # run_status = ( "queued", "in_progress", "completed", "requires_action", "expired", "cancelling", "cancelled", "failed" )
-                # waiting_status = ("queued", "in_progress", "cancelling")
-                if run.status == "requires_action":
-                    status.update(label=f"Running: {run.status}", state="running")
-                    submit_tool_outputs(run.id, thread.id)
+                    # run_status = ( "queued", "in_progress", "completed", "requires_action", "expired", "cancelling", "cancelled", "failed" )
+                    # waiting_status = ("queued", "in_progress", "cancelling")
+                    if run.status == "requires_action":
+                        status.update(label=f"Running: {run.status}", state="running")
+                        submit_tool_outputs(run.id, thread.id)
 
-                if run.status in ("expired", "cancelled", "failed"):
-                    status.update(label=run.status, state="error")
-                    break
+                    if run.status in ("expired", "cancelled", "failed"):
+                        st.write(run.last_error)
+                        status.update(label=run.status, state="error", expanded=True)
+                        break
 
-                if run.status == "completed":
-                    is_new_result = True
-                    status.update(label=run.status, state="complete")
-                    break
+                    if run.status == "completed":
+                        is_new_result = True
+                        status.update(label=run.status, state="complete")
+                        break
+            except Exception as e:
+                st.error(f"Error: {e}")
 
     if is_new_result:
         result = get_messages(thread.id)
         send_chat_message(result, "assistant")
+        # last message도 paint_chat_history()로 렌더링 ( 다운로드 버튼 생성 쉽게 하기 위해 )
+        st.rerun()
 
-    # st.write(st.session_state["messages"])
+with st.sidebar:
+    if st.button("Recreate Assistant", use_container_width=True):
+        create_assistant.clear()
+        st.write(assistant.id)
+
+    if st.button("Recreate Thread", use_container_width=True):
+        create_thread.clear()
+
+    if st.button("Recreate Run", use_container_width=True):
+        create_run.clear()
 
 
 # END LOG: script run/rerun

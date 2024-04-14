@@ -28,6 +28,36 @@ st.set_page_config(
 
 
 st.title("보너스 챕터14. OpenAI Assistants API")
+with st.expander("Assistants Api 살펴보기", expanded=True):
+    st.markdown(
+        """
+        #### 주요 동작
+        - thread 가 갖고 있는 run 이 active 상태이면, 신규로 create 할 수 없다.
+            - `status = ( "queued", "in_progress", "completed", "requires_action", "expired", "cancelling", "cancelled", "failed" )`
+            - `active_status = ( "in_progress", "requires_action", "cancelling", "queued" ) `
+                - cancelling, queued 는 추정임.
+        - in_progress 일때
+            - `client.beta.threads.runs.cancel()`로 cancel 할 수 있다.
+            - run 을 새로 생성할 때, message 가 다르면( 즉 다은 일감을 주면 ), 이어서, 작업을 시작한다.
+                - message 가 동일하면, 약간 정보를 보탠다. ( 여기선 무의미? )
+            - thread 를 새로 생성하면, 이전 대화가 사라지고 새롭게 시작한다.
+            - `client.beta.threads.runs.poll()` 를 사용하면,
+                - active 에서, 결과가 나올떄까지 동기적으로 기다린다.
+                    - 내부적으로 polling 즉, 체크하고 나서 다음으로 넘겨준다.  
+            - `while` 로 `run.status` 를 계속 체크하는 식으로도 해결할 수 있다.
+                - 이 경우 `asyncio` 를 사용해야 한다.
+        - `client.beta.threads.runs.create` 하면, `run.status = queued` 를 얻는다.
+            - 지속적으로 변하는 값을 받는 것이 아니라, 생성하는 순간의 상태값을 얻는 것 같다.
+        - 따라서 `client.beta.threads.runs.retrieve` 로 run 을 검색하여, 그 순간의 `run.status`를 체크해야 한다.
+        - 충전된 Balance가 <0 이 되면, 
+            - `run.status`에 `failed`가 뜬다.
+            - `run.last_error`로 메세지를 확인할 수 있다.
+                - `429 - You exceeded your current quota, please check your plan and billing details`
+
+            
+            
+    """
+    )
 
 with st.sidebar:
     if "api_key" not in st.session_state:
