@@ -1,4 +1,5 @@
 import os
+import functools
 import json
 from datetime import datetime
 import streamlit as st
@@ -75,11 +76,23 @@ def main():
 
         def add_log(*args, seperator=" | "):
             log_message = seperator.join(str(arg) for arg in args)
-            log = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}{seperator}{log_message}"
+            log = f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]}{seperator}{log_message}"
             st.session_state["logs"].append(log)
             log_box.write(log)
 
         paint_logs()
+
+    def assistant_api_logger(func):
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            result = func(*args, **kwargs)
+            if func.__name__ in ["create_run", "get_run", "get_runs_poll"]:
+                add_log(f":blue[{func.__name__}]", f":red[{result.status}]", result.id)
+            else:
+                add_log(f":blue[{func.__name__}]", result.id)
+            return result
+
+        return wrapper
 
     if not api_key:
         st.warning("Please provide an **:blue[OpenAI API Key]** on the sidebar.")
@@ -163,6 +176,7 @@ def main():
         },
     ]
 
+    @assistant_api_logger
     @st.cache_data
     def create_assistant():
         return client.beta.assistants.create(
@@ -177,6 +191,7 @@ def main():
             tools=functions,
         )
 
+    @assistant_api_logger
     @st.cache_data
     def create_thread(message_content):
         return client.beta.threads.create(
@@ -188,6 +203,7 @@ def main():
             ]
         )
 
+    @assistant_api_logger
     @st.cache_data
     def create_run(thread_id, assistant_id):
         return client.beta.threads.runs.create(
@@ -205,10 +221,20 @@ def main():
         if st.button("Recreate Run", use_container_width=True):
             create_run.clear()
 
+    @assistant_api_logger
     def get_run(run_id, thread_id):
         return client.beta.threads.runs.retrieve(
             run_id=run_id,
             thread_id=thread_id,
+        )
+
+    @assistant_api_logger
+    def get_runs_poll(run_id, thread_id):
+        return client.beta.threads.runs.poll(
+            run_id=run_id,
+            thread_id=thread_id,
+            poll_interval_ms=500,
+            timeout=20,
         )
 
     def send_message(thread_id, content):
@@ -313,8 +339,6 @@ def main():
     try:
         assistant = create_assistant()
 
-        add_log(":blue[create assistant]", assistant.id)
-
         if "message" not in st.session_state:
             st.session_state["message"] = ""
 
@@ -331,15 +355,12 @@ def main():
             send_chat_message(message, "user")
 
             thread = create_thread(message)
-            add_log(":blue[create thread]", thread.id)
 
             # create 시에는 status 가 무조건 queued 로 나옴 (run.status == "queued")
             run = create_run(thread.id, assistant.id)
-            add_log(":blue[create run]", f":red[{run.status}]", run.id)
 
             # 정확한 상태를 알기 위해 retrieve 를 이용함.
             run = get_run(run.id, thread.id)
-            add_log(":blue[get run]", f":red[{run.status}]", run.id)
 
             is_new_result = False
 
@@ -348,23 +369,7 @@ def main():
                     # st.write(run.id, " ===== ", run.status)
 
                     while True:
-                        run = client.beta.threads.runs.poll(
-                            run.id,
-                            thread.id,
-                            poll_interval_ms=500,
-                            timeout=20,
-                        )
-                        add_log(":blue[runs polling]", f":red[{run.status}]", run.id)
-
-                        polling_result_time = datetime.now()
-                        formatted_polling_result_time = polling_result_time.strftime(
-                            "%Y-%m-%d %H:%M:%S.%f"
-                        )[
-                            :-3
-                        ]  # milliseconds
-                        st.write(
-                            f"{formatted_polling_result_time} : :blue[{run.status}]"
-                        )
+                        run = get_runs_poll(run.id, thread.id)
 
                         # run_status = ( "queued", "in_progress", "completed", "requires_action", "expired", "cancelling", "cancelled", "failed" )
                         # waiting_status = ("queued", "in_progress", "cancelling")
