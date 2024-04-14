@@ -1,22 +1,16 @@
 import os
-import streamlit as st
+import json
 from datetime import datetime
-from typing import Type
-from pydantic import BaseModel
-from pydantic import Field
-from langchain.chat_models import ChatOpenAI
-from langchain.tools import BaseTool
-from langchain.agents import initialize_agent
-from langchain.agents import AgentType
+import streamlit as st
 from langchain.utilities import DuckDuckGoSearchAPIWrapper
 from langchain.utilities import WikipediaAPIWrapper
-from langchain.prompts import PromptTemplate
 from langchain.document_loaders import WebBaseLoader
-from langchain.schema.runnable import RunnablePassthrough
-import nest_asyncio
+from openai import OpenAI
 
-nest_asyncio.apply()
+# import nest_asyncio
+# nest_asyncio.apply()
 
+# START LOG: script run/rerun
 if "run_count" not in st.session_state:
     st.session_state["run_count"] = 0
 st.session_state["run_count"] += 1
@@ -27,8 +21,8 @@ print(
 )
 
 st.set_page_config(
-    page_title="SiteGPT | D29 과제",
-    page_icon="📃",
+    page_title="Assistant | D31 과제",
+    page_icon="👼",
 )
 
 st.title("D33 | OpenAI Assistants (졸업 과제)")
@@ -53,7 +47,6 @@ with st.sidebar:
 
     def reset_api_key():
         st.session_state["api_key"] = ""
-        # print(st.session_state["api_key"])
 
     if st.button(":red[Reset API_KEY]"):
         reset_api_key()
@@ -74,173 +67,328 @@ with st.sidebar:
         GitHub 링크: https://github.com/LifeFi/py_w08_fullstack_gpt_d15/blob/d31_agents/d31_agents.ipynb
         """
     )
-
-if "query" not in st.session_state:
-    st.session_state["query"] = ""
-
-if "result" not in st.session_state:
-    st.session_state["result"] = ""
-
-
-llm = ChatOpenAI(
-    temperature=0.1,
-    api_key=api_key if api_key else "_",
-)
-
-
-class WikipediaSearchTool(BaseTool):
-
-    name = "WikipediaSearchTool"
-    description = """
-    Use this tool to find the website for the given query.
-    """
-
-    class WikipediaSearchToolArgsSchema(BaseModel):
-        query: str = Field(
-            description="The query you will search for. Example query: Research about the XZ backdoor",
-        )
-
-    args_schema: Type[WikipediaSearchToolArgsSchema] = WikipediaSearchToolArgsSchema
-
-    def _run(self, query):
-        w = WikipediaAPIWrapper()
-        return w.run(query)
-
-
-class DuckDuckGoSearchTool(BaseTool):
-
-    name = "DuckDuckGoTool"
-    description = """
-    Use this tool to find the website for the given query.
-    """
-
-    class DuckDuckGoSearchToolArgsSchema(BaseModel):
-        query: str = Field(
-            description="The query you will search for. Example query: Research about the XZ backdoor",
-        )
-
-    args_schema: Type[DuckDuckGoSearchToolArgsSchema] = DuckDuckGoSearchToolArgsSchema
-
-    def _run(self, query):
-        ddg = DuckDuckGoSearchAPIWrapper()
-        return ddg.run(query)
-
-
-class LoadWebsiteTool(BaseTool):
-
-    name = "LoadWebsiteTool"
-    description = """
-    Use this tool to load the website for the given url.
-    """
-
-    class LoadWebsiteToolArgsSchema(BaseModel):
-        url: str = Field(
-            description="The url you will load. Example url: https://en.wikipedia.org/wiki/Backdoor_(computing)",
-        )
-
-    args_schema: Type[LoadWebsiteToolArgsSchema] = LoadWebsiteToolArgsSchema
-
-    def _run(self, url):
-        loader = WebBaseLoader([url])
-        docs = loader.load()
-        # transformer = Html2TextTransformer.transform_documents(docs)
-        # print(docs)
-        # with open("./outputs/research.txt", "w") as f:
-        #     f.write(docs.page_content)
-        return docs
-
-
-class SaveToFileTool(BaseTool):
-    name = "SaveToFileTool"
-    description = """
-    Use this tool to save the text to a file.
-    """
-
-    class SaveToFileToolArgsSchema(BaseModel):
-        text: str = Field(
-            description="The text you will save to a file.",
-        )
-        file_path: str = Field(
-            description="Path of the file to save the text to.",
-        )
-
-    args_schema: Type[SaveToFileToolArgsSchema] = SaveToFileToolArgsSchema
-
-    def _run(self, text, file_path):
-        research_dt = datetime.now().strftime("%Y%m%d_%H%M%S")
-        os.makedirs("./outputs", exist_ok=True)
-        file_name = f"./outputs/{research_dt}_{file_path}"
-
-        with open(file_name, "w", encoding="utf-8") as f:
-            f.write(text)
-
-        file_bytes = open(file_name, "rb").read()
-        st.download_button(
-            label="Download file",
-            data=file_bytes,
-            file_name=file_name,
-            mime="text/plain",
-        )
-
-        return f"Text saved to {research_dt}_{file_path}"
-
-
-def agent_invoke(input):
-
-    agent = initialize_agent(
-        llm=llm,
-        verbose=True,
-        agent=AgentType.OPENAI_FUNCTIONS,
-        handle_parsing_errors=True,
-        tools=[
-            WikipediaSearchTool(),
-            DuckDuckGoSearchTool(),
-            LoadWebsiteTool(),
-            SaveToFileTool(),
-        ],
-    )
-
-    prompt = PromptTemplate.from_template(
-        """    
-        1. query 에 대해서 검색하고
-        2. 검색 결과 목록에 website url 목록이 있으면, 각각의 website 내용을 text로 추출해서
-        3. txt 파일로 저장해줘.
-        4. 반드시 txt 내용도 모두 보여줘
-
-        query: {query}    
-        """,
-    )
-
-    chain = {"query": RunnablePassthrough()} | prompt | agent
-    result = chain.invoke(input)
-    return result["output"]
-
-
-# query = "Research about the XZ backdoor"
-
-# agent_invoke(query)
-
+    st.write("Research about the XZ backdoor")
 
 if not api_key:
     st.warning("Please provide an **:blue[OpenAI API Key]** on the sidebar.")
+    st.stop()
 
-if api_key:
-    st.subheader("What do you want reaearch about?")
-    col1, col2 = st.columns([4, 1])
-    with col1:
-        query = st.text_input(
-            "What do you want reaearch about?",
-            key="query_input",
-            value="Research about the XZ backdoor",
-            label_visibility="collapsed",
+
+client = OpenAI(api_key=api_key)
+
+
+def get_websites_by_wikipedia_search(inputs):
+    w = WikipediaAPIWrapper()
+    query = inputs["query"]
+    return w.run(query)
+
+
+def get_websites_by_duckduckgo_search(inputs):
+    ddg = DuckDuckGoSearchAPIWrapper()
+    query = inputs["query"]
+    return ddg.run(query)
+
+
+def get_document_text(inputs):
+    url = inputs["url"]
+    loader = WebBaseLoader([url])
+    docs = loader.load()
+    return docs[0].page_content
+
+
+def save_to_file(inputs):
+    text = inputs["text"]
+    file_path = inputs["file_path"]
+    research_dt = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+    os.makedirs("./outputs", exist_ok=True)
+    file_name = f"./outputs/{research_dt}_{file_path}"
+
+    with open(file_name, "w", encoding="utf-8") as f:
+        f.write(text)
+
+    file_bytes = open(file_name, "rb").read()
+
+    st.download_button(
+        label="Download file",
+        data=file_bytes,
+        file_name=f"{research_dt}_{file_path}",
+        mime="text/plain",
+        key=f"{research_dt}_{file_path}",
+    )
+    # return f"Text saved to {research_dt}_{file_path}"
+
+
+functions_map = {
+    "get_websites_by_wikipedia_search": get_websites_by_wikipedia_search,
+    "get_websites_by_duckduckgo_search": get_websites_by_duckduckgo_search,
+    "get_document_text": get_document_text,
+    # "save_to_file": save_to_file,
+}
+
+functions = [
+    {
+        "type": "function",
+        "function": {
+            "name": "get_websites_by_wikipedia_search",
+            "description": "Use this tool to find the websites for the given query.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The query you will search for. Example query: Research about the XZ backdoor",
+                    }
+                },
+                "required": ["query"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_websites_by_duckduckgo_search",
+            "description": "Use this tool to find the websites for the given query.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "The query you will search for. Example query: Research about the XZ backdoor",
+                    }
+                },
+                "required": ["query"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_document_text",
+            "description": "Use this tool to load the website for the given url.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "url": {
+                        "type": "string",
+                        "description": "The url you will load. Example url: https://en.wikipedia.org/wiki/Backdoor_(computing)",
+                    }
+                },
+                "required": ["url"],
+            },
+        },
+    },
+    # {
+    #     "type": "function",
+    #     "function": {
+    #         "name": "save_to_file",
+    #         "description": "Use this tool to save the text to a file.",
+    #         "parameters": {
+    #             "type": "object",
+    #             "properties": {
+    #                 "text": {
+    #                     "type": "string",
+    #                     "description": "The text you will save to a file.",
+    #                 },
+    #                 "file_path": {
+    #                     "type": "string",
+    #                     "description": "Path of the file to save the text to.",
+    #                 },
+    #             },
+    #             "required": ["text", "file_path"],
+    #         },
+    #     },
+    # },
+]
+
+
+@st.cache_data
+def create_assistant():
+    return client.beta.assistants.create(
+        name="Research Assistant",
+        instructions="""
+        0. 당신은 user의 Research Assistant 입니다.
+        1. query 에 대해서 검색하고
+        2. 검색 결과 목록에 website url 목록이 있으면, 각각의 website 내용을 text로 추출해줘.  
+
+        """,
+        model="gpt-4-1106-preview",
+        tools=functions,
+    )
+
+
+# if st.button("Recreate Assistant", type="primary"):
+#     create_assistant.clear()
+
+# with st.status("Creating Assistant...", expanded=True) as status:
+#     assistant = create_assistant()
+#     status.update(label="Assistant Created!", state="complete")
+
+# st.write(assistant.id)
+
+
+@st.cache_data
+def create_thread(message_content):
+    return client.beta.threads.create(
+        messages=[
+            {
+                "role": "user",
+                "content": message_content,
+            }
+        ]
+    )
+
+
+@st.cache_data
+def create_run(thread_id, assistant_id):
+    return client.beta.threads.runs.create(
+        thread_id=thread_id,
+        assistant_id=assistant_id,
+    )
+
+
+def get_run(run_id, thread_id):
+    return client.beta.threads.runs.retrieve(
+        run_id=run_id,
+        thread_id=thread_id,
+    )
+
+
+def send_message(thread_id, content):
+    return client.beta.threads.messages.create(
+        thread_id=thread_id, role="user", content=content
+    )
+
+
+def get_messages(thread_id, assistant_only=True):
+    messages = client.beta.threads.messages.list(thread_id=thread_id)
+    messages = list(messages)
+    messages.reverse()
+    # print(messages)
+    result = ""
+    for message in messages:
+        if assistant_only and message.role != "assistant":
+            continue
+        result = result + f"\n\n{message.content[0].text.value}"
+        # print(f"{message.role}: {message.content[0].text.value}")
+    return result
+
+
+def get_tool_outputs(run_id, thread_id):
+    run = get_run(run_id, thread_id)
+    # st.write(run.required_action)
+    outputs = []
+    for action in run.required_action.submit_tool_outputs.tool_calls:
+        # st.write(action)
+        action_id = action.id
+        function = action.function
+        print(f"Calling function: {function.name} with arg {function.arguments}")
+        outputs.append(
+            {
+                "output": functions_map[function.name](json.loads(function.arguments)),
+                "tool_call_id": action_id,
+            }
         )
-    with col2:
-        run_agent = st.button(
-            "Run Agent",
-            key="run_button",
-            type="primary",
-            use_container_width=True,
+    return outputs
+
+
+def submit_tool_outputs(run_id, thread_id):
+    outputs = get_tool_outputs(run_id, thread_id)
+    return client.beta.threads.runs.submit_tool_outputs(
+        run_id=run_id,
+        thread_id=thread_id,
+        tool_outputs=outputs,
+    )
+
+
+def save_chat_message(message, role):
+    st.session_state["messages"].append({"message": message, "role": role})
+
+
+def send_chat_message(message, role, save=True, download=True):
+    with st.chat_message(role):
+        st.markdown(message)
+    if save:
+        save_chat_message(message, role)
+    if role == "assistant" and download:
+        save_to_file({"text": message, "file_path": "research.txt"})
+
+
+def paint_chat_history():
+    if "messages" not in st.session_state:
+        st.session_state["messages"] = []
+    for index, message in enumerate(st.session_state["messages"]):
+        send_chat_message(
+            message["message"],
+            message["role"],
+            save=False,
+            download=False,
         )
+        if message["role"] == "assistant":
+            save_to_file(
+                {"text": message["message"], "file_path": f"{index}_research.txt"}
+            )
+
+
+assistant = create_assistant()
+
+if "message" not in st.session_state:
+    st.session_state["message"] = ""
+
+send_chat_message("I'm ready! Ask away!", "assistant", save=False, download=False)
+paint_chat_history()
+
+if message := st.chat_input("What do you want reaearch about?", key="message_input"):
+    st.session_state["message"] = message
+
+    send_chat_message(message, "user")
+
+    thread = create_thread(message)
+
+    # create 시에는 status 가 무조건 queued 로 나옴 (run.status == "queued")
+    run = create_run(thread.id, assistant.id)
+    # 정확한 상태를 알기 위해 retrieve 를 이용함.
+    run = get_run(run.id, thread.id)
+
+    is_new_result = False
+    with st.chat_message("assistant"):
+        with st.status(":red[Polling Run Status...]") as status:
+            # st.write(run.id, " ===== ", run.status)
+            while True:
+                run = client.beta.threads.runs.poll(
+                    run.id,
+                    thread.id,
+                    poll_interval_ms=500,
+                    timeout=20,
+                )
+
+                polling_result_time = datetime.now()
+                formatted_polling_result_time = polling_result_time.strftime(
+                    "%Y-%m-%d %H:%M:%S.%f"
+                )[
+                    :-3
+                ]  # milliseconds
+                st.write(f"{formatted_polling_result_time} : :blue[{run.status}]")
+
+                # run_status = ( "queued", "in_progress", "completed", "requires_action", "expired", "cancelling", "cancelled", "failed" )
+                # waiting_status = ("queued", "in_progress", "cancelling")
+                if run.status == "requires_action":
+                    status.update(label=f"Running: {run.status}", state="running")
+                    submit_tool_outputs(run.id, thread.id)
+
+                if run.status in ("expired", "cancelled", "failed"):
+                    status.update(label=run.status, state="error")
+                    break
+
+                if run.status == "completed":
+                    is_new_result = True
+                    status.update(label=run.status, state="complete")
+                    break
+
+    if is_new_result:
+        result = get_messages(thread.id)
+        send_chat_message(result, "assistant")
+
+    # st.write(st.session_state["messages"])
 
 
 # END LOG: script run/rerun

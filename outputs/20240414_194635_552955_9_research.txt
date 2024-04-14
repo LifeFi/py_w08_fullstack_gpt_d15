@@ -1,0 +1,13 @@
+
+
+코파일럿에 대해서 더 자세히 조사해줘
+
+It appears that the Copilot being referenced here is related to Microsoft's product offerings, specifically within the sphere of Microsoft 365. Here's a summary of the details on Copilot based on the search results:
+
+1. Copilot is described as "Your everyday AI companion," indicating that it is designed to assist users in their daily tasks within the Microsoft ecosystem.
+2. The Copilot feature in Windows allows users to change Windows settings, such as enabling dark mode or adjusting the volume, via voice commands or text inputs.
+3. New capabilities in Copilot enable it to provide tailored responses based on the user's role and preferences. This includes formatting, style, and tone preferences which will initially be available in Word and PowerPoint, with future expansions to other applications.
+4. Copilot is part of Microsoft 365 and is intended to boost productivity and creativity in widely used applications such as Word, Excel, PowerPoint, and Outlook.
+5. Copilot supports multiple languages including English (various regions), Spanish, Japanese, French, German, Portuguese, Italian, and Chinese Simplified.
+
+For more comprehensive information, accessing specific websites or official Microsoft documentation would provide deeper insights into Copilot's functionalities and capabilities. If you'd like to obtain text from specific websites for detailed information, please let me know, and I will proceed with extracting the content.

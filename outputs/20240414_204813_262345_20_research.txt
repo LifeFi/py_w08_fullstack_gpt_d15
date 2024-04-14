@@ -1,0 +1,14 @@
+
+
+Here is the information extracted from the Wikipedia pages:
+
+1. XZ Utils - Wikipedia
+XZ Utils, formerly known as LZMA Utils, is a set of command-line data compressors, including `xz` and `lzma`, for Unix-like operating systems and Microsoft Windows. It uses the Lempel-Ziv-Markov chain algorithm (LZMA) for compression. A major backdoor incident took place in March 2024 when a PostgreSQL developer working at Microsoft discovered a backdoor in XZ Utils versions 5.6.0 and 5.6.1. Suspicious activity related to `ssh` logins and CPU usage prompted an investigation, leading to the discovery of compressed test files and modifications to the `configure` script within the tar files. The discovery and reporting of the backdoor led to it being assigned the CVE number CVE-2024-3094 and a CVSS score of 10. The source code for XZ Utils is publicly available, and the incident affected major Linux distributions, although it had not yet been widely deployed to production systems.
+
+2. Supply chain attack - Wikipedia
+A supply chain attack targets less secure elements within the supply chain to damage an organization. It can occur in any industry and involves tampering with the manufacturing or distribution of a product by installing malware or hardware-based spying components. Such attacks have increased over recent years, and a supply chain can be composed of various interconnected players subject to supply and demand dynamics. Supply chain attacks can lead to data breaches, financial losses, and damages to a company's reputation.
+
+3. Timeline of computer viruses and worms - Wikipedia
+This page outlines a chronological timeline of noteworthy computer viruses, worms, Trojan horses, and other malware, as well as related research and events. The page may contain information on various malware incidents and their impact on computer security and history.
+
+The extracted texts provide a summary of the recent XZ Utils backdoor incident, a general overview of supply chain attacks, and mention a page dedicated to the history of computer viruses and worms that have occurred over time. If you need more detailed information or have further inquiries, feel free to ask.

@@ -1,0 +1,13 @@
+
+
+업스테이지 회사에 대해서 조사해줘
+
+Upstage is a South Korean artificial intelligence (AI) company that appears to have made significant progress in the development of large language models (LLMs). Here are some key points from the search results:
+
+1. Upstage's 30-billion-parameter Large Language Model secured the top position on HuggingFace's Open LLM Leaderboard, which evaluates and ranks open-source language models.
+2. The company launched its flagship SOLAR MINI Small Language Model on Amazon Web Services (AWS). SOLAR MINI is designed to be versatile, easily customized, and fine-tuned for a range of language tasks.
+3. Upstage's Llama2-70b model outperformed GPT-3.5 on the Open LLM Leaderboard, becoming the first company globally to do so.
+4. Solar Mini, introduced in December 2023, reached the top of the Hugging Face Open LLM Leaderboard, with responses comparable to GPT-3.5 but at 2.5 times the speed.
+5. CEO Kim Seong-hoon leads Upstage, and the company works in collaboration with the Artificial Intelligence Industry Convergence Business Group to develop the world's best large language models and promote AI industry development.
+
+For the full details from each website, please let me know if you would like me to retrieve and provide the texts from the individual websites.

@@ -1,0 +1,24 @@
+
+
+엔씨소프트 조사해줘
+
+Here are the extracted texts from the Wikipedia pages related to NCsoft and its games:
+
+## NCSoft - Wikipedia
+NCSoft Corporation, stylized as NC, is a South Korean video game developer and publisher. Its headquarters are located in Pangyo, Seongnam, South Korea. NCSoft is primarily known for distributing massively multiplayer online role-playing games (MMORPGs) such as Lineage and Guild Wars. The company was founded in March 1997 by Kim Taek Jin and has launched several well-known MMORPGs.
+
+The company has subsidiaries such as ArenaNet, Iron Tiger Studios, and NC Dinos. NCSoft faced various controversies over the years, including issues related to stolen source code, a worlds.com patent lawsuit, the termination of Richard Garriott, and the closure of Paragon Studios and City of Heroes.
+
+NCSoft has published numerous games over the years, including Lineage, Lineage II, City of Heroes, Guild Wars, Aion, and Blade & Soul, among others. There have been closures of various MMORPGs developed or published by NCSoft, with City of Heroes receiving a shutdown notice in 2012. However, as of January 2024, Homecoming Servers announced they had been given a limited license to run a City of Heroes server.
+
+The company has recently expanded into the Korean entertainment industry with the launching of a new subsidiary called "Klap Co., Ltd." and introduced an entertainment platform named UNIVERSE.
+
+## Master X Master - Wikipedia
+Master X Master (MXM) was a multiplayer online battle arena (MOBA) video game developed and published by NCsoft. It featured PvE and PVP modes where players could control two characters at the same time. The game included characters from various NCsoft titles. Despite some positive feedback from early access and pre-release interactions, MXM did not gain enough traction and was officially closed on January 31, 2018.
+
+## City of Heroes - Wikipedia
+City of Heroes (CoH) was an MMORPG developed by Cryptic Studios and published by NCSoft. Launched in North America on April 28, 2004, and in Europe in February 2005, the game allowed players to create super-powered player characters to team up for missions and combat criminals in the fictional Paragon City. After receiving twenty-three major updates, City of Heroes was shut down on November 30, 2012, following the termination of Paragon Studios by NCSoft.
+
+In April 2019, City of Heroes source code was distributed, allowing the creation of private servers. NCSoft has not moved to shut down these servers. In fact, NCSoft granted an official license to Homecoming Servers, LLC to host the game as of January 4, 2024.
+
+Please let me know if you need any further information or assistance.
