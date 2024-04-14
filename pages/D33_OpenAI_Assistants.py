@@ -356,10 +356,10 @@ def main():
 
             thread = create_thread(message)
 
-            # create 시에는 status 가 무조건 queued 로 나옴 (run.status == "queued")
+            # create 시에는 status 가 무조건 queued 로 시작된다고 함(run.status == "queued")
             run = create_run(thread.id, assistant.id)
 
-            # 정확한 상태를 알기 위해 retrieve 를 이용함.
+            # 원래 상태를 알기 위해 retrieve로 다시 검색.
             run = get_run(run.id, thread.id)
 
             is_new_result = False
