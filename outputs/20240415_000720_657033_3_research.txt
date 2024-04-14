@@ -1,0 +1,9 @@
+
+
+A search for "Research about the XZ backdoor" has surfaced information on a significant security issue involving the xz Utils, an open source data compression utility. It appears that a backdoor was intentionally planted in versions 5.6.0 and 5.6.1 of xz Utils. This backdoor could manipulate the sshd server process, which is vital for secure internet connections, and affect user authentication, encryption, terminal connections, file transfers, and tunneling.
+
+This backdoor is notably sophisticated and has been compared to the operations of advanced persistent threat (APT) groups like APT41 and Lazarus, though there's speculation it might be the work of different actors. Further analysis by Kaspersky researchers has identified the HrServ web shell that displays both APT and crimeware traits and has likely been active since 2021, seeing that Asian APT groups continue to target a range of organizations globally.
+
+The backdoor in xz-utils was reported on March 28, 2024, and the information was shared with the oss-security@openwall mailing list the following day. It has been cataloged as CVE-2024-3094, and measures are presumably being taken to mitigate the vulnerabilities it introduced.
+
+Since the search results contain summarised text and not direct URLs to the websites, I cannot extract the text of the websites for you. If you need further details or text from specific websites, please let me know the URLs, and I will assist in extracting the required text.

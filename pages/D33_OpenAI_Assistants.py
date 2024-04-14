@@ -334,68 +334,48 @@ def paint_chat_history():
 try:
     assistant = create_assistant()
 
-except AuthenticationError as e:
-    st.error(f"Authentication 오류: API_KEY 를 확인해 주세요.")
+    add_log(
+        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[create assistant] | {assistant.id}"
+    )
 
-except Exception as e:
-    st.error(f"Error: {e}")
+    if "message" not in st.session_state:
+        st.session_state["message"] = ""
 
+    send_chat_message("I'm ready! Ask away!", "assistant", save=False, download=False)
+    paint_chat_history()
 
-add_log(
-    f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[create assistant] | {assistant.id}"
-)
+    if message := st.chat_input(
+        "What do you want reaearch about?", key="message_input"
+    ):
+        st.session_state["message"] = message
 
+        send_chat_message(message, "user")
 
-if "message" not in st.session_state:
-    st.session_state["message"] = ""
-
-send_chat_message("I'm ready! Ask away!", "assistant", save=False, download=False)
-paint_chat_history()
-
-
-if message := st.chat_input("What do you want reaearch about?", key="message_input"):
-    st.session_state["message"] = message
-
-    send_chat_message(message, "user")
-
-    try:
         thread = create_thread(message)
 
-    except AuthenticationError as e:
-        st.error(f"Authentication 오류: API_KEY 를 확인해 주세요.")
+        add_log(
+            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[create thread] | {thread.id}"
+        )
 
-    except Exception as e:
-        st.error(f"Error: {e}")
+        # create 시에는 status 가 무조건 queued 로 나옴 (run.status == "queued")
 
-    add_log(
-        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[create thread] | {thread.id}"
-    )
-
-    # create 시에는 status 가 무조건 queued 로 나옴 (run.status == "queued")
-    try:
         run = create_run(thread.id, assistant.id)
 
-    except AuthenticationError as e:
-        st.error(f"Authentication 오류: API_KEY 를 확인해 주세요.")
+        add_log(
+            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[create run] | :red[{run.status}] | {run.id}"
+        )
+        # 정확한 상태를 알기 위해 retrieve 를 이용함.
+        run = get_run(run.id, thread.id)
+        add_log(
+            f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[get run] | :red[{run.status}] | {run.id}"
+        )
 
-    except Exception as e:
-        st.error(f"Error: {e}")
+        is_new_result = False
 
-    add_log(
-        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[create run] | :red[{run.status}] | {run.id}"
-    )
-    # 정확한 상태를 알기 위해 retrieve 를 이용함.
-    run = get_run(run.id, thread.id)
-    add_log(
-        f"{datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:-3]}  | :blue[get run] | :red[{run.status}] | {run.id}"
-    )
+        with st.chat_message("assistant"):
+            with st.status(":red[Polling Run Status...]") as status:
+                # st.write(run.id, " ===== ", run.status)
 
-    is_new_result = False
-
-    with st.chat_message("assistant"):
-        with st.status(":red[Polling Run Status...]") as status:
-            # st.write(run.id, " ===== ", run.status)
-            try:
                 while True:
                     run = client.beta.threads.runs.poll(
                         run.id,
@@ -430,14 +410,19 @@ if message := st.chat_input("What do you want reaearch about?", key="message_inp
                         is_new_result = True
                         status.update(label=run.status, state="complete")
                         break
-            except Exception as e:
-                st.error(f"Error: {e}")
 
-    if is_new_result:
-        result = get_messages(thread.id)
-        send_chat_message(result, "assistant")
-        # last message도 paint_chat_history()로 렌더링 ( 다운로드 버튼 생성 쉽게 하기 위해 )
-        st.rerun()
+        if is_new_result:
+            result = get_messages(thread.id)
+            send_chat_message(result, "assistant")
+            # last message도 paint_chat_history()로 렌더링 ( 다운로드 버튼 생성 쉽게 하기 위해 )
+            st.rerun()
+
+
+except AuthenticationError as e:
+    st.error(f"Authentication 오류: API_KEY 를 확인해 주세요.")
+
+except Exception as e:
+    st.error(f"Error: {e}")
 
 
 # END LOG: script run/rerun
