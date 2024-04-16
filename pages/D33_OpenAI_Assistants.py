@@ -400,7 +400,11 @@ def main():
         st.error(f"Authentication 오류: API_KEY 를 확인해 주세요.")
 
     except Exception as e:
-        st.error(f"Error: {e}")
+        if "no assistant" in str(e).lower():
+            create_assistant.clear()
+            st.rerun()
+        else:
+            st.error(f"Error: {e}")
 
 
 main()
