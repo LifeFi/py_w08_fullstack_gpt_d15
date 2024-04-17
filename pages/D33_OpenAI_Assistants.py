@@ -402,6 +402,11 @@ def main():
         if "no assistant" in str(e).lower():
             create_assistant.clear()
             st.rerun()
+
+        elif "no thread" in str(e).lower():
+            create_thread.clear()
+            st.rerun()
+
         else:
             st.error(f"Error: {e}")
 
