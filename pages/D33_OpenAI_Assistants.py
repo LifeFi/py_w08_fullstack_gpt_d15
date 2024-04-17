@@ -1,12 +1,12 @@
-import os
+from datetime import datetime
 import functools
 import json
-from datetime import datetime
-import streamlit as st
+import os
 from langchain.utilities import DuckDuckGoSearchAPIWrapper
 from langchain.utilities import WikipediaAPIWrapper
 from langchain.document_loaders import WebBaseLoader
 from openai import OpenAI, AuthenticationError
+import streamlit as st
 from common.time_logger import time_logger
 
 
@@ -19,7 +19,6 @@ def main():
 
     st.title("D33 | OpenAI Assistants (졸업 과제)")
     with st.expander("과제 내용 보기", expanded=False):
-        # st.snow()
         st.markdown(
             """
         ### D31 (2024-04-10) 과제
@@ -397,7 +396,7 @@ def main():
                 st.rerun()
 
     except AuthenticationError as e:
-        st.error(f"Authentication 오류: API_KEY 를 확인해 주세요.")
+        st.error("Authentication 오류: API_KEY 를 확인해 주세요.")
 
     except Exception as e:
         if "no assistant" in str(e).lower():
